@@ -1,11 +1,9 @@
-from openai import OpenAI
-import os
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 def check(text):
-    res = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role":"user","content":text}]
-    )
-    return res.choices[0].message.content
+    keywords = ["ai", "python", "data", "machine"]
+
+    score = 0
+    for k in keywords:
+        if k in text.lower():
+            score += 1
+
+    return f"AI baho: {score}/4"
