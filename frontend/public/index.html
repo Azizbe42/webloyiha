@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Exam System</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100">
+
+<!-- NAVBAR -->
+<nav class="bg-blue-600 text-white p-4 flex justify-between">
+  <h1 class="text-xl font-bold">Exam AI System</h1>
+  <div>
+    <button onclick="showPage('login')" class="mr-2">Login</button>
+    <button onclick="showPage('register')">Register</button>
+  </div>
+</nav>
+
+<!-- LOGIN -->
+<div id="login" class="p-10">
+  <div class="max-w-md mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-2xl mb-4">Login</h2>
+    <input id="loginUser" placeholder="Username" class="w-full p-2 border mb-2"/>
+    <input id="loginPass" type="password" placeholder="Password" class="w-full p-2 border mb-2"/>
+    <button onclick="login()" class="bg-blue-500 text-white w-full p-2">Login</button>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="register" class="p-10 hidden">
+  <div class="max-w-md mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-2xl mb-4">Register</h2>
+    <input id="regUser" placeholder="Username" class="w-full p-2 border mb-2"/>
+    <input id="regPass" type="password" placeholder="Password" class="w-full p-2 border mb-2"/>
+    <select id="role" class="w-full p-2 border mb-2">
+      <option value="student">Student</option>
+      <option value="teacher">Teacher</option>
+    </select>
+    <button onclick="register()" class="bg-green-500 text-white w-full p-2">Register</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden p-6">
+
+  <h1 class="text-3xl mb-4">Dashboard</h1>
+
+  <!-- EXAM -->
+  <div class="bg-white p-4 rounded shadow mb-4">
+    <h2 class="text-xl mb-2">Exam</h2>
+
+    <input id="q1" placeholder="Q1" class="border p-2 mb-2 w-full"/>
+    <input id="q2" placeholder="Q2" class="border p-2 mb-2 w-full"/>
+    <input id="q3" placeholder="Q3" class="border p-2 mb-2 w-full"/>
+    <input id="q4" placeholder="Q4" class="border p-2 mb-2 w-full"/>
+
+    <button onclick="submitExam()" class="bg-blue-500 text-white p-2">Submit</button>
+
+    <h3 id="score" class="mt-2 text-lg"></h3>
+  </div>
+
+  <!-- AI -->
+  <div class="bg-white p-4 rounded shadow mb-4">
+    <h2 class="text-xl mb-2">AI Check</h2>
+    <textarea id="aiText" class="border p-2 w-full mb-2"></textarea>
+    <button onclick="aiCheck()" class="bg-purple-500 text-white p-2">Check</button>
+    <p id="aiResult" class="mt-2"></p>
+  </div>
+
+</div>
+
+<script>
+let API = "http://localhost:8000";
+let token = "";
+
+// page switch
+function showPage(page){
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("register").classList.add("hidden");
+  document.getElementById("dashboard").classList.add("hidden");
+
+  document.getElementById(page).classList.remove("hidden");
+}
+
+// register
+async function register(){
+  let username = document.getElementById("regUser").value;
+  let password = document.getElementById("regPass").value;
+  let role = document.getElementById("role").value;
+
+  await fetch(API + "/register", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username,password,role})
+  });
+
+  alert("Registered!");
+  showPage("login");
+}
+
+// login
+async function login(){
+  let username = document.getElementById("loginUser").value;
+  let password = document.getElementById("loginPass").value;
+
+  let res = await fetch(API + "/login", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username,password})
+  });
+
+  let data = await res.json();
+  token = data.access_token;
+
+  showPage("dashboard");
+}
+
+// exam
+async function submitExam(){
+  let answers = [
+    document.getElementById("q1").value,
+    document.getElementById("q2").value,
+    document.getElementById("q3").value,
+    document.getElementById("q4").value
+  ];
+
+  let res = await fetch(API + "/submit", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer " + token
+    },
+    body:JSON.stringify({answers})
+  });
+
+  let data = await res.json();
+  document.getElementById("score").innerText = "Score: " + data.score;
+}
+
+// AI
+async function aiCheck(){
+  let text = document.getElementById("aiText").value;
+
+  let res = await fetch(API + "/ai-check", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({text})
+  });
+
+  let data = await res.json();
+  document.getElementById("aiResult").innerText = data.response;
+}
+</script>
+
+</body>
+</html>
